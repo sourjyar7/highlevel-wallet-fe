@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Card, Input, Button, Radio, Typography, Space, message } from 'antd';
+import { Card, Input, Button, Radio, Typography, Space, message, Spin } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { API_BASE_URL } from '../config/api';
 
@@ -26,7 +26,8 @@ interface Wallet {
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [showSetup, setShowSetup] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [showSetup, setShowSetup] = useState(() => !localStorage.getItem('walletId'));
   const [username, setUsername] = useState('');
   const [balance, setBalance] = useState('');
   const [amount, setAmount] = useState('');
@@ -35,12 +36,16 @@ const WalletPage = () => {
 
   useEffect(() => {
     const walletId = localStorage.getItem('walletId');
-    if (walletId && !showSetup) {
+    if (walletId) {
       fetchWallet(walletId);
+    } else {
+      setShowSetup(true);
+      setLoading(false);
     }
-  }, [showSetup]);
+  }, []);
 
   const fetchWallet = async (id: string) => {
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/wallet/${id}`);
       const data = await response.json();
@@ -50,6 +55,7 @@ const WalletPage = () => {
       }
       
       setWallet(data);
+      setShowSetup(false);
     } catch (error) {
       if (error instanceof Error) {
         message.error(error.message || 'Error fetching wallet');
@@ -58,6 +64,9 @@ const WalletPage = () => {
       }
       localStorage.removeItem('walletId');
       setWallet(null);
+      setShowSetup(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,6 +145,16 @@ const WalletPage = () => {
     setShowSetup(true);
   };
 
+  if (loading) {
+    return (
+      <Container>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <Spin size="large" />
+        </div>
+      </Container>
+    );
+  }
+
   if (showSetup) {
     return (
       <Container>
@@ -180,7 +199,15 @@ const WalletPage = () => {
       {!wallet ? (
         <StyledCard>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Title level={2}>Welcome to Wallet System</Title>
+            <Space>
+              <Button 
+                icon={<ArrowLeftOutlined />} 
+                onClick={() => navigate('/')}
+              >
+                Back
+              </Button>
+              <Title level={2}>Welcome to Wallet System</Title>
+            </Space>
             <Button type="primary" onClick={handleNewWallet} block>
               Create New Wallet
             </Button>

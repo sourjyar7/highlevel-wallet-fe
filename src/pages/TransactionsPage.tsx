@@ -95,6 +95,8 @@ const TransactionsPage = () => {
       setTransactions(data.transactions);
       setPagination({
         ...pagination,
+        current: current,
+        pageSize: pageSize,
         total: data.pagination.total
       });
     } catch (error) {
