@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Card, Input, Button, Radio, Typography, Space, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import { API_BASE_URL } from '../config/api';
 
 const { Title } = Typography;
 
@@ -41,7 +42,7 @@ const WalletPage = () => {
 
   const fetchWallet = async (id: string) => {
     try {
-      const response = await fetch(`/api/wallet/${id}`);
+      const response = await fetch(`${API_BASE_URL}/wallet/${id}`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -63,7 +64,7 @@ const WalletPage = () => {
   const handleCreateWallet = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/wallet/setup', {
+      const response = await fetch(`${API_BASE_URL}/wallet/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,7 +102,7 @@ const WalletPage = () => {
     if (!wallet) return;
     
     try {
-      const response = await fetch(`/api/transact/${wallet.id}`, {
+      const response = await fetch(`${API_BASE_URL}/transact/${wallet.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

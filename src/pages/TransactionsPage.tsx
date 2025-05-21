@@ -5,6 +5,7 @@ import { Table, Button, Space, Modal, message, Alert } from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import { ExclamationCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+import { API_BASE_URL } from '../config/api';
 
 const { confirm } = Modal;
 
@@ -88,7 +89,7 @@ const TransactionsPage = () => {
     try {
       const { current, pageSize, sortField, sortOrder } = params;
       const response = await fetch(
-        `/api/transactions?walletId=${walletId}&skip=${(current - 1) * pageSize}&limit=${pageSize}&sort=${sortField || 'createdAt'}&order=${sortOrder === 'ascend' ? 'ASC' : 'DESC'}`
+        `${API_BASE_URL}/transactions?walletId=${walletId}&skip=${(current - 1) * pageSize}&limit=${pageSize}&sort=${sortField || 'createdAt'}&order=${sortOrder === 'ascend' ? 'ASC' : 'DESC'}`
       );
       const data = await response.json();
       setTransactions(data.transactions);
@@ -119,7 +120,7 @@ const TransactionsPage = () => {
   const exportCSV = async () => {
     const walletId = localStorage.getItem('walletId');
     try {
-      const response = await fetch(`/api/transactions/export?walletId=${walletId}`);
+      const response = await fetch(`${API_BASE_URL}/transactions/export?walletId=${walletId}`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -133,7 +134,7 @@ const TransactionsPage = () => {
 
   const handleDeleteTransaction = async (id: string) => {
     try {
-      const response = await fetch(`/api/transactions/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'DELETE'
       });
       
@@ -163,7 +164,7 @@ const TransactionsPage = () => {
       cancelText: 'No',
       onOk: async () => {
         try {
-          const response = await fetch(`/api/transactions/wallet/${walletId}`, {
+          const response = await fetch(`${API_BASE_URL}/transactions/wallet/${walletId}`, {
             method: 'DELETE'
           });
           
@@ -191,7 +192,7 @@ const TransactionsPage = () => {
     }
 
     try {
-      const response = await fetch(`/api/wallet/${walletId}`);
+      const response = await fetch(`${API_BASE_URL}/wallet/${walletId}`);
       const data = await response.json();
       
       if (!response.ok) {

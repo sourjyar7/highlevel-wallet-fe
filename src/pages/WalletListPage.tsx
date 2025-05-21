@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Button, Typography, Space, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { API_BASE_URL } from '../config/api';
 
 const { Title } = Typography;
 
@@ -98,7 +99,7 @@ const WalletListPage = () => {
   const fetchWallets = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/wallet');
+      const response = await fetch(`${API_BASE_URL}/wallet`);
       const data = await response.json();
       
       if (!response.ok) {
@@ -125,7 +126,7 @@ const WalletListPage = () => {
 
   const handleDeleteWallet = async (walletId: string) => {
     try {
-      const response = await fetch(`/api/wallet/${walletId}`, {
+      const response = await fetch(`${API_BASE_URL}/wallet/${walletId}`, {
         method: 'DELETE'
       });
       
@@ -144,7 +145,7 @@ const WalletListPage = () => {
 
   const handleStatusChange = async (walletId: string, status: string) => {
     try {
-      const response = await fetch(`/api/wallet/${walletId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/wallet/${walletId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
