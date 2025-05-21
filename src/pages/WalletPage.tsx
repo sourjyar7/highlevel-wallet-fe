@@ -94,7 +94,7 @@ const WalletPage = () => {
       
       localStorage.setItem('walletId', data.id);
       message.success('Wallet created successfully');
-      setShowSetup(false);
+      navigate('/');
       setUsername('');
       setBalance('');
     } catch (error) {
