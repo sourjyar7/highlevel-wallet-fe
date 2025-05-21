@@ -30,7 +30,7 @@ interface TableParams {
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
     current: 1,
     pageSize: 10,
     total: 0
@@ -76,10 +76,12 @@ const TransactionsPage = () => {
       }
 
       setTransactions(data.transactions);
-      setPagination({
-        ...pagination,
+      setPagination(prev => ({
+        ...prev,
+        current: params.pagination.current || 1,
+        pageSize: params.pagination.pageSize || 10,
         total: data.pagination.total
-      });
+      }));
     } catch (error: any) {
       message.error(error.message || 'Error fetching transactions');
     }
