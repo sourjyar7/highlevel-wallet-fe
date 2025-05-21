@@ -22,12 +22,9 @@ const Header = styled.div`
   margin-bottom: 20px;
 `;
 
-// Define proper types for table params
 interface TableParams {
-  current: number;
-  pageSize: number;
-  sortField?: string;
-  sortOrder?: 'ascend' | 'descend' | null;
+  pagination: TablePaginationConfig;
+  sorter?: SorterResult<any> | SorterResult<any>[];
 }
 
 const TransactionsPage = () => {
@@ -41,44 +38,7 @@ const TransactionsPage = () => {
   const [wallet, setWallet] = useState<{ status: string } | null>(null);
   const navigate = useNavigate();
 
-  const columns: ColumnsType<any> = [
-    {
-      title: 'Date',
-      dataIndex: 'createdAt',
-      render: (date) => new Date(date).toLocaleString(),
-      sorter: true
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'amount',
-      render: (amount) => `$${Number(amount).toFixed(2)}`,
-      sorter: true
-    },
-    {
-      title: 'Type',
-      dataIndex: 'type'
-    },
-    {
-      title: 'Description',
-      dataIndex: 'description'
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Button 
-          danger 
-          onClick={() => handleDeleteTransaction(record.id)}
-          disabled={wallet?.status !== 'FROZEN'}
-          title={wallet?.status !== 'FROZEN' ? 'Wallet must be frozen to delete transactions' : ''}
-        >
-          Delete
-        </Button>
-      ),
-    }
-  ];
-
-  const fetchTransactions = async (params: TableParams = { current: 1, pageSize: 10 }) => {
+  const fetchTransactions = async (params: TableParams) => {
     const walletId = localStorage.getItem('walletId');
     if (!walletId) {
       navigate('/');
@@ -87,35 +47,53 @@ const TransactionsPage = () => {
 
     setLoading(true);
     try {
-      const { current, pageSize, sortField, sortOrder } = params;
+      const { pagination, sorter } = params;
+      const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+      
+      // Map frontend field names to backend field names
+      const sortFieldMap: { [key: string]: string } = {
+        createdAt: 'createdAt',
+        amount: 'amount'
+      };
+
+      // Build query parameters
+      const queryParams = new URLSearchParams({
+        walletId,
+        skip: String((pagination.current! - 1) * pagination.pageSize!),
+        limit: String(pagination.pageSize),
+        sort: currentSorter?.field ? sortFieldMap[currentSorter.field.toString()] || 'createdAt' : 'createdAt',
+        order: currentSorter?.order === 'ascend' ? 'ASC' : 'DESC'
+      });
+
       const response = await fetch(
-        `${API_BASE_URL}/transactions?walletId=${walletId}&skip=${(current - 1) * pageSize}&limit=${pageSize}&sort=${sortField || 'createdAt'}&order=${sortOrder === 'ascend' ? 'ASC' : 'DESC'}`
+        `${API_BASE_URL}/transactions?${queryParams.toString()}`
       );
+      
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch transactions');
+      }
+
       setTransactions(data.transactions);
       setPagination({
         ...pagination,
-        current: current,
-        pageSize: pageSize,
         total: data.pagination.total
       });
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
+    } catch (error: any) {
+      message.error(error.message || 'Error fetching transactions');
     }
     setLoading(false);
   };
 
   const handleTableChange = (
-    pagination: TablePaginationConfig,
+    newPagination: TablePaginationConfig,
     _filters: Record<string, FilterValue | null>,
     sorter: SorterResult<any> | SorterResult<any>[]
   ) => {
-    const singleSorter = Array.isArray(sorter) ? sorter[0] : sorter;
     fetchTransactions({
-      current: pagination.current || 1,
-      pageSize: pagination.pageSize || 10,
-      sortField: singleSorter.field?.toString(),
-      sortOrder: singleSorter.order || undefined
+      pagination: newPagination,
+      sorter
     });
   };
 
@@ -147,7 +125,9 @@ const TransactionsPage = () => {
       }
       
       message.success('Transaction deleted successfully');
-      fetchTransactions(); // Refresh the list
+      fetchTransactions({
+        pagination: { current: 1, pageSize: 10 }
+      });
     } catch (error: any) {
       message.error(error.message || 'Error deleting transaction');
     }
@@ -177,8 +157,10 @@ const TransactionsPage = () => {
           }
           
           message.success('All transactions deleted successfully');
-          fetchTransactions(); // Refresh the list
-          fetchWallet(); // Refresh wallet status
+          fetchTransactions({
+            pagination: { current: 1, pageSize: 10 }
+          });
+          fetchWallet();
         } catch (error: any) {
           message.error(error.message || 'Error deleting transactions');
         }
@@ -209,8 +191,49 @@ const TransactionsPage = () => {
 
   useEffect(() => {
     fetchWallet();
-    fetchTransactions();
+    fetchTransactions({
+      pagination: { current: 1, pageSize: 10 }
+    });
   }, []);
+
+  const columns: ColumnsType<any> = [
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      render: (date) => new Date(date).toLocaleString(),
+      sorter: true,
+      key: 'createdAt'
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      render: (amount) => `$${Number(amount).toFixed(2)}`,
+      sorter: true,
+      key: 'amount'
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type'
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description'
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Button 
+          danger 
+          onClick={() => handleDeleteTransaction(record.id)}
+          disabled={wallet?.status !== 'FROZEN'}
+          title={wallet?.status !== 'FROZEN' ? 'Wallet must be frozen to delete transactions' : ''}
+        >
+          Delete
+        </Button>
+      ),
+    }
+  ];
 
   return (
     <Container>
