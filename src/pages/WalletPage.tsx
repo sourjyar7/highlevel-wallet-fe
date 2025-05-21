@@ -50,7 +50,11 @@ const WalletPage = () => {
       
       setWallet(data);
     } catch (error) {
-      message.error(error.message || 'Error fetching wallet');
+      if (error instanceof Error) {
+        message.error(error.message || 'Error fetching wallet');
+      } else {
+        message.error('Error fetching wallet');
+      }
       localStorage.removeItem('walletId');
       setWallet(null);
     }
@@ -84,7 +88,11 @@ const WalletPage = () => {
       setUsername('');
       setBalance('');
     } catch (error) {
-      message.error(error.message || 'Error creating wallet');
+      if (error instanceof Error) {
+        message.error(error.message || 'Error creating wallet');
+      } else {
+        message.error('Error creating wallet');
+      }
     }
   };
 
@@ -113,7 +121,11 @@ const WalletPage = () => {
       setAmount('');
       message.success('Transaction completed successfully');
     } catch (error) {
-      message.error(error.message || 'Error processing transaction');
+      if (error instanceof Error) {
+        message.error(error.message || 'Error processing transaction');
+      } else {
+        message.error('Error processing transaction');
+      }
     }
   };
 

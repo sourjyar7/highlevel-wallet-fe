@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Table, Button, Space, Typography, Select, Modal, message, Alert } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import { Table, Button, Space, Modal, message, Alert } from 'antd';
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import { ExclamationCircleOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
-const { Title } = Typography;
 const { confirm } = Modal;
 
 const Container = styled.div`
@@ -20,6 +20,14 @@ const Header = styled.div`
   align-items: center;
   margin-bottom: 20px;
 `;
+
+// Define proper types for table params
+interface TableParams {
+  current: number;
+  pageSize: number;
+  sortField?: string;
+  sortOrder?: 'ascend' | 'descend' | null;
+}
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -69,7 +77,7 @@ const TransactionsPage = () => {
     }
   ];
 
-  const fetchTransactions = async (params = {}) => {
+  const fetchTransactions = async (params: TableParams = { current: 1, pageSize: 10 }) => {
     const walletId = localStorage.getItem('walletId');
     if (!walletId) {
       navigate('/');
@@ -94,12 +102,17 @@ const TransactionsPage = () => {
     setLoading(false);
   };
 
-  const handleTableChange = (pagination, filters, sorter) => {
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<any> | SorterResult<any>[]
+  ) => {
+    const singleSorter = Array.isArray(sorter) ? sorter[0] : sorter;
     fetchTransactions({
-      current: pagination.current,
-      pageSize: pagination.pageSize,
-      sortField: sorter.field,
-      sortOrder: sorter.order
+      current: pagination.current || 1,
+      pageSize: pagination.pageSize || 10,
+      sortField: singleSorter.field?.toString(),
+      sortOrder: singleSorter.order || undefined
     });
   };
 
@@ -193,7 +206,7 @@ const TransactionsPage = () => {
 
   useEffect(() => {
     fetchWallet();
-    fetchTransactions({ current: 1, pageSize: 10 });
+    fetchTransactions();
   }, []);
 
   return (

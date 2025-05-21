@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Card, Button, Typography, Space, Table, message } from 'antd';
+import { Button, Typography, Space, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
